@@ -2,7 +2,7 @@
 #include "stdio.h"
 #include <math.h>
 
-#define width 640
+#define width 1280
 #define height 480
 
 #define GRID_SIZE 5
@@ -11,10 +11,22 @@
 #define PI 3.14159265359f
 #define ROTATION_SPEED (PI/32.0f) 
 
-float playerX = 0;
-float playerY = 0;
 
 float playerAngle = 0.0f;
+
+struct Vec2 {
+    float x;
+    float y;
+};
+
+struct Vec2 playerPos;
+
+struct Col {
+    struct Vec2;
+    float distance;
+};
+
+struct Col LastCol;
 
 int grid[GRID_SIZE][GRID_SIZE] = {
     {1, 1, 1, 1, 1},
@@ -53,7 +65,7 @@ void DrawGrid() {
 
 void DrawPlayer() {
     glColor3f(1, 0, 0);
-    DrawSquare(playerX, playerY, 0.1f);
+    DrawSquare(playerPos.x, playerPos.y, 0.1f);
 }
 
 int CheckCollision(float x, float y) {
@@ -69,14 +81,45 @@ int CheckCollision(float x, float y) {
     return grid[row][col] != 0 ? 1 : 0;
 }
 
-void DrawRay(float xO, float yO, float angle, float length) {
-    float xF = xO + cosf(angle) * length;
-    float yF = yO + sinf(angle) * length;
+void DrawRay(struct Vec2 startPos, float angle, float length) {
+    float xF = startPos.x + cosf(angle) * length;
+    float yF = startPos.y + sinf(angle) * length;
     glColor3f(0, 1, 0);
     glBegin(GL_LINES);
-    glVertex2f(xO, yO);
+    glVertex2f(startPos.x, startPos.y);
     glVertex2f(xF, yF);
     glEnd();
+}
+
+struct Col RayCast(struct Vec2 startPos, float angle, float repSize) {
+    struct Col CollisionPoint;
+
+    int collision = 0;
+    float xF = 0;
+    float yF = 0;
+    while (collision == 0)
+    {
+        xF = startPos.x + cosf(angle) * repSize;
+        yF = startPos.y + sinf(angle) * repSize;
+
+        collision = CheckCollision(xF, yF);
+        repSize += 0.1f;
+        if (collision == 0) {
+            printf("Not collision at: %f ; %f with %f size\n", xF, yF, repSize);
+        }
+        else {
+            printf("Collision at: %f ; %f with %f size\n", xF, yF, repSize);
+        }
+
+    }
+
+    CollisionPoint.x = xF;
+    CollisionPoint.y = yF;
+
+    CollisionPoint.distance = repSize;
+
+
+    return CollisionPoint;
 }
 
 float normalizeAngle(float angle) {
@@ -90,19 +133,19 @@ float normalizeAngle(float angle) {
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
         if (key == GLFW_KEY_W) {
-            float newX = playerX + cosf(playerAngle) * movementDisplacement;
-            float newY = playerY + sinf(playerAngle) * movementDisplacement;
+            float newX = playerPos.x + cosf(playerAngle) * movementDisplacement;
+            float newY = playerPos.y + sinf(playerAngle) * movementDisplacement;
             if (!CheckCollision(newX, newY)) {
-                playerX = newX;
-                playerY = newY;
+                playerPos.x = newX;
+                playerPos.y = newY;
             }
         }
         else if (key == GLFW_KEY_S) {
-            float newX = playerX - cosf(playerAngle) * movementDisplacement;
-            float newY = playerY - sinf(playerAngle) * movementDisplacement;
+            float newX = playerPos.x - cosf(playerAngle) * movementDisplacement;
+            float newY = playerPos.y - sinf(playerAngle) * movementDisplacement;
             if (!CheckCollision(newX, newY)) {
-                playerX = newX;
-                playerY = newY;
+                playerPos.x = newX;
+                playerPos.y = newY;
             }
         }
         else if (key == GLFW_KEY_A) {
@@ -111,8 +154,37 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
         else if (key == GLFW_KEY_D) {
             playerAngle = normalizeAngle(playerAngle - ROTATION_SPEED);
         }
+        LastCol = RayCast(playerPos, playerAngle, 0.1f);
     }
 }
+
+void DrawGameView() {
+
+    glViewport(0, 0, width / 2, height);
+
+    glScissor(0, 0, width / 2, height);
+    glEnable(GL_SCISSOR_TEST);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    DrawGrid();
+    DrawPlayer();
+
+    DrawRay(playerPos, playerAngle, LastCol.distance);
+
+    glDisable(GL_SCISSOR_TEST);
+}
+
+void Draw3DView() {
+
+    glViewport(width / 2, 0, width / 2, height);
+
+    glScissor(width / 2, 0, width / 2, height);
+    glEnable(GL_SCISSOR_TEST);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDisable(GL_SCISSOR_TEST);
+
+}
+
 int main(void)
 {
     GLFWwindow* window;
@@ -135,18 +207,13 @@ int main(void)
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-        /* Render here */
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f); 
         glClear(GL_COLOR_BUFFER_BIT);
 
-        DrawGrid();
-        DrawPlayer();
-        DrawRay(playerX, playerY, playerAngle, 0.5f);
- 
+        DrawGameView();
+        Draw3DView();
 
-        /* Swap front and back buffers */
         glfwSwapBuffers(window);
-
-        /* Poll for and process events */
         glfwPollEvents();
     }
 
