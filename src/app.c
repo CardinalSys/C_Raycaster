@@ -208,10 +208,10 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             }
         }
         else if (key == GLFW_KEY_A) {
-            playerAngle = normalizeAngle(playerAngle + ROTATION_SPEED);
+            playerAngle = normalizeAngle(playerAngle - ROTATION_SPEED);
         }
         else if (key == GLFW_KEY_D) {
-            playerAngle = normalizeAngle(playerAngle - ROTATION_SPEED);
+            playerAngle = normalizeAngle(playerAngle + ROTATION_SPEED);
         }
     }
 }
@@ -267,6 +267,24 @@ void Draw3DView() {
     float angleStep = FOV / numRays;
 
     float startAngle = playerAngle - FOV / 2;
+
+    glColor3f(0.5f, 0.75f, 1.0f); // Sky color
+    glBegin(GL_QUADS);
+    // Top half of the screen
+    glVertex2f(-1.0f, 0.0f);  // Bottom-left
+    glVertex2f(1.0f, 0.0f);   // Bottom-right
+    glVertex2f(1.0f, 1.0f);   // Top-right
+    glVertex2f(-1.0f, 1.0f);  // Top-left
+    glEnd();
+
+    glColor3f(0.9f, 0.9f, 0.9f);
+    glBegin(GL_QUADS);
+    // Bottom half of the screen
+    glVertex2f(-1.0f, -1.0f); // Bottom-left
+    glVertex2f(1.0f, -1.0f);  // Bottom-right
+    glVertex2f(1.0f, 0.0f);   // Top-right
+    glVertex2f(-1.0f, 0.0f);  // Top-left
+    glEnd();
 
     for (int i = 0; i < numRays; i++) {
         float rayAngle = startAngle + (i * angleStep);
