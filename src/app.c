@@ -5,8 +5,8 @@
 #define width 1280
 #define height 480
 
-#define GRID_SIZE 5
-#define CELL_SIZE 0.39f
+#define GRID_SIZE 10
+#define CELL_SIZE 0.19f
 #define movementDisplacement 0.05f
 #define PI 3.14159265359f
 #define ROTATION_SPEED (PI/32.0f) 
@@ -14,6 +14,8 @@
 
 
 float playerAngle = 0.0f;
+
+float testDistance;
 
 struct Vec2 {
     float x;
@@ -27,24 +29,31 @@ struct Col {
     float distance;
 };
 
-struct Col LeftCol;
-struct Col CenterCol;
-struct Col RightCol;
 
 int grid[GRID_SIZE][GRID_SIZE] = {
-    {1, 1, 1, 1, 1},
-    {1, 0, 0, 0, 1},
-    {1, 0, 0, 0, 1},
-    {1, 0, 0, 0, 1},
-    {1, 1, 1, 1, 1}
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 };
+
+double time = 0;
+double oldTime = 0;
+
+void Draw3DSquare(float distance, float angle, float xOffset);
 
 void DrawSquare(float x, float y, float size) {
     glBegin(GL_QUADS);
-    glVertex2f(x - size / 2, y - size / 2);
-    glVertex2f(x - size / 2, y + size / 2);
-    glVertex2f(x + size / 2, y + size / 2);
-    glVertex2f(x + size / 2, y - size / 2);
+    glVertex2f(x, y);
+    glVertex2f(x, y + size);
+    glVertex2f(x + size, y + size);
+    glVertex2f(x + size, y);
     glEnd();
 }
 
@@ -53,48 +62,45 @@ void DrawGrid() {
     for (int i = 0; i < GRID_SIZE; i++) {
         for (int j = 0; j < GRID_SIZE; j++) {
             if (grid[i][j] == 1) {
-                glColor3f(0.05f, 0.05f, 0.05f);
+                glColor3f(0.05f, 0.05f, 0.05f); // Wall color
             }
             else {
-                glColor3f(1, 1, 1);
+                glColor3f(1, 1, 1); // Floor color
             }
-            float x = -0.8f + i * 0.4f;
-            float y = -0.8f + j * 0.4f;
+
+
+            float x = -1.0f + i * CELL_SIZE;
+            float y = -1.0f + j * CELL_SIZE;
             DrawSquare(x, y, CELL_SIZE);
         }
     }
-
 }
 
 void DrawPlayer() {
-    glColor3f(1, 0, 0);
-    DrawSquare(playerPos.x, playerPos.y, 0.1f);
+    glColor3f(1, 0, 0); // Player color
+    float playerSize = CELL_SIZE / 4; // Player size is smaller than a cell
+
+    // Center the player square on the player's position
+    float x = playerPos.x - playerSize / 2;
+    float y = playerPos.y - playerSize / 2;
+
+    DrawSquare(x, y, playerSize);
 }
+
 
 int CheckCollision(float x, float y) {
-
-    int col = (int)((x + 1.0f) / CELL_SIZE); 
+    int col = (int)((x + 1.0f) / CELL_SIZE);
     int row = (int)((y + 1.0f) / CELL_SIZE);
 
-
     if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE)
-        return 1; 
+        return 1;
 
-
-    return grid[row][col] != 0 ? 1 : 0;
+    return grid[col][row] != 0 ? 1 : 0;  // Fixed by swapping row and col
 }
 
-void DrawRay(struct Vec2 startPos, float angle, float length) {
-    float xF = startPos.x + cosf(angle) * length;
-    float yF = startPos.y + sinf(angle) * length;
-    glColor3f(0, 1, 0);
-    glBegin(GL_LINES);
-    glVertex2f(startPos.x, startPos.y);
-    glVertex2f(xF, yF);
-    glEnd();
-}
 
-void DDA(struct Vec2 startPos, float angle) {
+
+float DDA(struct Vec2 startPos, float angle, int debug) {
     printf("\n--- DDA Debug ---\n");
     printf("Start position: (%f, %f)\n", startPos.x, startPos.y);
     printf("Angle: %f radians\n", angle);
@@ -132,7 +138,8 @@ void DDA(struct Vec2 startPos, float angle) {
 
     glBegin(GL_POINTS);
     while (i <= step && !CheckCollision(x, y)) {
-        glVertex2f(x, y);
+        if(debug == 1)
+            glVertex2f(x, y);
         x += dx;
         y += dy;
         i++;
@@ -143,10 +150,13 @@ void DDA(struct Vec2 startPos, float angle) {
     }
     glEnd();
     glPointSize(1.0f);
-
+    float distance = sqrt(pow(startPos.x - x, 2) + pow(startPos.y - y, 2));
+    printf("Distance: %f", distance);
     printf("Final position: (%f, %f)\n", x, y);
     printf("Points drawn: %d\n", i);
     printf("--- End DDA Debug ---\n");
+    return distance;
+
 }
 
 float normalizeAngle(float angle) {
@@ -197,52 +207,65 @@ void DrawGameView() {
     DrawGrid();
     DrawPlayer();
 
-    DDA(playerPos, playerAngle);
+    testDistance = DDA(playerPos, playerAngle, 1);
 
     glDisable(GL_SCISSOR_TEST);
 }
 
-void Draw3DSquare(struct Col col, float angle, float xOffset) {  // Added xOffset parameter
-    if (col.distance > 0) {
+void Draw3DSquare(float distance, float angle, float xOffset) {
+    if (distance > 0) {
         float scale = 0.1f;
 
-        // Calculate the projected height accounting for fisheye correction
-        float correctedDistance = col.distance * cosf(angle);  // Correct for fisheye
+
+        float correctedDistance = distance * cosf(angle);
         float projectedHeight = (scale / correctedDistance);
 
         if (projectedHeight > 1.0f) projectedHeight = 1.0f;
 
-        // Use xOffset instead of calculating displacement based on angle
+
+        float stripWidth = 2.0f / 320.0f; 
+
+
         float brightness = 1.0f / (1.0f + correctedDistance * 0.5f);
         glColor3f(brightness, brightness, brightness);
 
         glBegin(GL_QUADS);
-        glVertex2f(-0.1f + xOffset, projectedHeight);
-        glVertex2f(-0.1f + xOffset, -projectedHeight);
-        glVertex2f(0.1f + xOffset, -projectedHeight);
-        glVertex2f(0.1f + xOffset, projectedHeight);
+        glVertex2f(xOffset, projectedHeight);
+        glVertex2f(xOffset, -projectedHeight);
+        glVertex2f(xOffset + stripWidth, -projectedHeight);
+        glVertex2f(xOffset + stripWidth, projectedHeight);
         glEnd();
     }
 }
-
 void Draw3DView() {
     glViewport(width / 2, 0, width / 2, height);
     glScissor(width / 2, 0, width / 2, height);
     glEnable(GL_SCISSOR_TEST);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Calculate relative angles for each ray
-    float leftAngle = -FOV / 2;
-    float centerAngle = 0.0f;
-    float rightAngle = FOV / 2;
+    int numRays = 320; // Number of vertical strips to render
+    float rayAngle;
+    float angleStep = FOV / numRays;
 
-    // Space the squares evenly across the view
-    Draw3DSquare(LeftCol, leftAngle, -0.6f);    // Left portion
-    Draw3DSquare(CenterCol, centerAngle, 0.0f); // Center portion
-    Draw3DSquare(RightCol, rightAngle, 0.6f);   // Right portion
+
+    float startAngle = playerAngle - FOV / 2;
+
+    for (int i = 0; i < numRays; i++) {
+
+        rayAngle = startAngle + (i * angleStep);
+        rayAngle = normalizeAngle(rayAngle);
+
+
+        float distance = DDA(playerPos, rayAngle, 0);
+
+        float xOffset = -1.0f + (2.0f * i) / numRays;
+
+        Draw3DSquare(distance, rayAngle - playerAngle, xOffset);
+    }
 
     glDisable(GL_SCISSOR_TEST);
 }
+
 int main(void)
 {
     GLFWwindow* window;
