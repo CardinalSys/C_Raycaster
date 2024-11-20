@@ -64,10 +64,9 @@ void DrawGrid() {
 }
 
 void DrawPlayer() {
-    glColor3f(1, 0, 0); // Player color
-    float playerSize = CELL_SIZE / 4; // Player size is smaller than a cell
+    glColor3f(1, 0, 0);
+    float playerSize = CELL_SIZE / 4;
 
-    // Center the player square on the player's position
     float x = playerPos.x - playerSize / 2;
     float y = playerPos.y - playerSize / 2;
 
