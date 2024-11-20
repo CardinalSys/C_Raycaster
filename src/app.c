@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include <STB/stb_image.h>
 
 #define WIDTH 1280
 #define HEIGHT 480
@@ -358,7 +358,7 @@ void Draw3DView() {
     glEnable(GL_SCISSOR_TEST);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    int numRays = 320; // Number of vertical strips to render
+    int numRays = HEIGHT; // Number of vertical strips to render
     float angleStep = FOV / numRays;
 
     float startAngle = playerAngle - FOV / 2;

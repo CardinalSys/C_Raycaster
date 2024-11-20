@@ -55,7 +55,7 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\stb_image.h">
+    <ClInclude Include="Dependencies\STB\stb_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
