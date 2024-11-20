@@ -12,6 +12,10 @@
 #define ROTATION_SPEED (PI/32.0f)
 #define FOV (PI/2.0f)
 
+double previousTime = 0.0;
+int frameCount = 0;
+double fps = 0.0;
+
 float playerAngle = 0.0f;
 
 struct Vec2 {
@@ -308,6 +312,19 @@ int main(void)
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
+        double currentTime = glfwGetTime();
+        frameCount++;
+
+        // Si ha pasado un segundo, calcula FPS
+        if (currentTime - previousTime >= 1.0) {
+            fps = (double)frameCount / (currentTime - previousTime);
+            previousTime = currentTime;
+            frameCount = 0;
+
+            // Imprime los FPS en la consola (opcional)
+            printf("FPS: %.2f\n", fps);
+        }
+
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
