@@ -141,6 +141,22 @@
   <ItemGroup>
     <ClCompile Include="src\app.c" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="src\Textures\barrel.png" />
+    <Image Include="src\Textures\bluestone.png" />
+    <Image Include="src\Textures\colorstone.png" />
+    <Image Include="src\Textures\eagle.png" />
+    <Image Include="src\Textures\greenlight.png" />
+    <Image Include="src\Textures\greystone.png" />
+    <Image Include="src\Textures\mossy.png" />
+    <Image Include="src\Textures\pillar.png" />
+    <Image Include="src\Textures\purplestone.png" />
+    <Image Include="src\Textures\redbrick.png" />
+    <Image Include="src\Textures\wood.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\stb_image.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
