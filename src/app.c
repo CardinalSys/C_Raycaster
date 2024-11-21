@@ -54,6 +54,8 @@ int grid[GRID_SIZE][GRID_SIZE] = {
 void InitTextureManager() {
     textureManager.textureCount = 0;
 }
+void DrawSquare(float x, float y, float size, int textureId);
+
 
 GLuint LoadTexture(const char* filePath) {
     // Flip images vertically to match OpenGL's coordinate system
@@ -107,14 +109,7 @@ struct RaycastHit {
     float texX; // Texture coordinate x (0.0 - 1.0)
 };
 
-void DrawSquare(float x, float y, float size) {
-    glBegin(GL_QUADS);
-    glVertex2f(x, y);
-    glVertex2f(x, y + size);
-    glVertex2f(x + size, y + size);
-    glVertex2f(x + size, y);
-    glEnd();
-}
+
 
 void DrawGrid() {
     float gridOriginX = -1.0f;
@@ -122,16 +117,18 @@ void DrawGrid() {
 
     for (int row = 0; row < GRID_SIZE; row++) {
         for (int col = 0; col < GRID_SIZE; col++) {
+            float x = gridOriginX + col * CELL_SIZE;
+            float y = gridOriginY + row * CELL_SIZE;
             if (grid[row][col] == 1 || grid[row][col] == 2) {
-                glColor3f(0.05f, 0.05f, 0.05f); // Wall color
+                DrawSquare(x, y, CELL_SIZE, textureManager.textureIds[grid[row][col] - 1], 0);
             }
             else {
                 glColor3f(1, 1, 1); // Floor color
+                DrawSquare(x, y, CELL_SIZE, -1, 0);
             }
 
-            float x = gridOriginX + col * CELL_SIZE;
-            float y = gridOriginY + row * CELL_SIZE;
-            DrawSquare(x, y, CELL_SIZE);
+
+
         }
     }
 }
@@ -143,7 +140,7 @@ void DrawPlayer() {
     float x = playerPos.x - playerSize / 2;
     float y = playerPos.y - playerSize / 2;
 
-    DrawSquare(x, y, playerSize);
+    DrawSquare(x, y, playerSize, 0, 0);
 }
 
 int CheckCollision(float x, float y) {
@@ -308,6 +305,31 @@ void DrawGameView() {
     glDisable(GL_SCISSOR_TEST);
 }
 
+void DrawSquare(float x, float y, float size, int textureId) {
+    if (textureId != -1) {
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, textureId);
+    }
+    else {
+        glDisable(GL_TEXTURE_2D);
+    }
+
+    glBegin(GL_QUADS);
+    glTexCoord2f(0, 0); // Bottom-Left
+    glVertex2f(x, y);
+    glTexCoord2f(1, 0); // Bottom-Right
+    glVertex2f(x + size, y);
+    glTexCoord2f(1, 1); // Top-Right
+    glVertex2f(x + size, y + size);
+    glTexCoord2f(0, 1); // Top-Left
+    glVertex2f(x, y + size);
+    glEnd();
+
+    if (textureId != -1) {
+        glDisable(GL_TEXTURE_2D);
+    }
+}
+
 void Draw3DSquare(float distance, float angleDiff, float xOffset, int textureID, float texX) {
     if (distance > 0) {
 
@@ -323,9 +345,7 @@ void Draw3DSquare(float distance, float angleDiff, float xOffset, int textureID,
         if (projectedHEIGHT > 1.0f) projectedHEIGHT = 1.0f;
 
         float stripWIDTH = 2.0f / 320.0f; // Assuming 320 strips
-        float brightness = 1.0f / (1.0f + correctedDistance * 0.5f);
-        if (brightness > 1.0f) brightness = 1.0f;
-        glColor3f(brightness, brightness, brightness);
+
 
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, textureID);
