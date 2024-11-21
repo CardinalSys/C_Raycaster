@@ -342,7 +342,6 @@ void Draw3DSquare(float distance, float angleDiff, float xOffset, int textureID,
 
         float projectedHEIGHT = (scale / correctedDistance);
 
-        if (projectedHEIGHT > 1.0f) projectedHEIGHT = 1.0f;
 
         float stripWIDTH = 2.0f / 320.0f; // Assuming 320 strips
 
